@@ -2,20 +2,23 @@
 
 Gray-Scott reaction-diffusion where the grid is **domain-decomposed across
 supervised Elixir processes**: 8 horizontal strips, each strip a `GenServer`
-owning its rows, halo rows exchanged through messages every simulation step —
+owning its rows, halo rows exchanged through messages every simulation step -
 the actor version of an MPI stencil computation.
+
+## Screenshot
+![Screenshot](screenshot.jpg)
 
 The **server** is an Elixir node running the simulation. The **client** is a
 macOS app rendering the V field over TCP as a Metal texture with a colormap
 shader.
 
-The demo: press **K** — a random strip process is killed. Its part of the
+The demo: press **K** - a random strip process is killed. Its part of the
 pattern vanishes (the supervisor restarts it blank), and then the
 reaction-diffusion dynamics **heal the wound** from the neighbouring strips.
 Fault tolerance you can literally watch.
 
 Zero external dependencies on both sides: pure Elixir/OTP stdlib, pure
-Metal / MetalKit / Network.framework. No Mix project — plain `elixirc`.
+Metal / MetalKit / Network.framework. No Mix project - plain `elixirc`.
 
 ```
 +-------------------------------+        +---------------------------+
@@ -73,17 +76,17 @@ cd client
 open build/GrayScottMetal.app
 ```
 
-The pattern needs a couple of minutes to grow from the initial seeds —
+The pattern needs a couple of minutes to grow from the initial seeds -
 an almost empty field at the start is expected. Press **S** to drop more
 seeds, **K** to kill a strip and watch the wound heal.
 
 ## Notes
 
 - The hot loop (`Strip.update_cells/12`) is a hand-rolled 10-list recursion
-  instead of `Enum.zip/1` — ~3x faster, ~180 sim steps/s on a 128x128 grid.
+  instead of `Enum.zip/1` - ~3x faster, ~180 sim steps/s on a 128x128 grid.
   Pure-BEAM float math is not the point here; the coordination is.
 - `Coordinator` tolerates strips dying between lookup and call
-  (`catch :exit`) — the same race as in any distributed system: a pid can
+  (`catch :exit`) - the same race as in any distributed system: a pid can
   die between "found" and "called".
 - A killed strip restarts in the uniform state (U=1, V=0) by design: the
   supervisor guarantees the process, the physics regrows the data.

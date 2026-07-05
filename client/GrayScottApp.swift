@@ -6,7 +6,7 @@
 //         S — drop new seed spots
 //
 //  Run the server first:
-//    cd elixir && mix run --no-halt
+//    cd server && ./run.zsh
 
 import SwiftUI
 import MetalKit

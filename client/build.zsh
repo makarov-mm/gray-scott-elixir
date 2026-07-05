@@ -1,7 +1,7 @@
 #!/bin/zsh
-# build.zsh — build BoidsMetal.app from the command line, no Xcode project.
+# build.zsh — build GrayScottMetal.app from the command line, no Xcode project.
 # Run from the directory with the sources:
-#   swift/BoidsMetal/ $ ./build.zsh
+#   client/ $ ./build.zsh
 # Requires Xcode or Command Line Tools (xcrun, swiftc, metal).
 
 set -euo pipefail
@@ -70,4 +70,4 @@ echo "==> ad-hoc code signing"
 codesign --force --deep -s - "$APP"
 
 echo "==> done: $APP"
-echo "    run the Erlang server first, then:  open $APP"
+echo "    run the Elixir server first, then:  open $APP"

@@ -67,14 +67,16 @@ defmodule GrayScott.Coordinator do
 
   @doc "Seed V spots across random strips."
   def seed(n_strips, cols, count \\ 6) do
-    pids = strip_pids(n_strips) |> Enum.reject(&is_nil/1)
+    case strip_pids(n_strips) |> Enum.reject(&is_nil/1) do
+      [] -> :ok
+      pids ->
+        for _ <- 1..count do
+          pid = Enum.random(pids)
+          safe(fn -> GrayScott.Strip.seed(pid, :rand.uniform(cols) - 1, 3) end)
+        end
 
-    for _ <- 1..count do
-      pid = Enum.random(pids)
-      safe(fn -> GrayScott.Strip.seed(pid, :rand.uniform(cols) - 1, 3) end)
+        :ok
     end
-
-    :ok
   end
 
   # ---------------------------------------------------------------

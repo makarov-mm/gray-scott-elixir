@@ -1,8 +1,12 @@
 defmodule GrayScott.Application do
   @moduledoc """
-  Supervision tree. Grid: @n_strips horizontal strips of @rows_per_strip
-  rows, @cols columns. Each strip is a permanent worker: kill one and it
-  restarts blank — the pattern heals from the neighbours.
+  Supervision tree. Grid: `@n_strips` horizontal strips of `@rows_per_strip`
+  rows, `@cols` columns. Each strip is a permanent worker: kill one and it
+  restarts blank - the pattern heals from the neighbours.
+
+      Registry (unique keys: strip index -> pid)
+      Strip 0 .. Strip 7
+      Server  (Task: seeds the field, accepts one renderer at a time)
   """
   use Application
 
@@ -15,35 +19,32 @@ defmodule GrayScott.Application do
   def start(_type, _args) do
     strips =
       for i <- 0..(@n_strips - 1) do
-        Supervisor.child_spec(
-          {GrayScott.Strip, {i, @rows_per_strip, @cols}},
-          id: {:strip, i}
-        )
+        Supervisor.child_spec({GrayScott.Strip, {i, @rows_per_strip, @cols}}, id: {:strip, i})
       end
 
-    children =
-      [{Registry, keys: :unique, name: GrayScott.Registry}] ++
-        strips ++
-        [
-          %{
-            id: GrayScott.Server,
-            start:
-              {Task, :start_link,
-               [
-                 fn ->
-                   GrayScott.Server.start(
-                     n_strips: @n_strips,
-                     rows_per_strip: @rows_per_strip,
-                     cols: @cols,
-                     port: @port
-                   )
-                 end
-               ]},
-            restart: :permanent
-          }
-        ]
+    server =
+      Supervisor.child_spec(
+        {Task,
+         fn ->
+           GrayScott.Server.start(
+             n_strips: @n_strips,
+             rows_per_strip: @rows_per_strip,
+             cols: @cols,
+             port: @port
+           )
+         end},
+        id: GrayScott.Server,
+        restart: :permanent
+      )
 
-    opts = [strategy: :one_for_one, name: GrayScott.Supervisor, max_restarts: 100, max_seconds: 1]
-    Supervisor.start_link(children, opts)
+    children = [{Registry, keys: :unique, name: GrayScott.Registry}] ++ strips ++ [server]
+
+    # Generous restart intensity: chaos mode kills strips on purpose
+    Supervisor.start_link(children,
+      strategy: :one_for_one,
+      name: GrayScott.Supervisor,
+      max_restarts: 100,
+      max_seconds: 1
+    )
   end
 end

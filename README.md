@@ -35,7 +35,7 @@ Metal / MetalKit / Network.framework. No Mix project - plain `elixirc`.
 |   |   16 rows x 128 cols)     | frames |   r8Unorm texture +       |
 |   +- Strip 1 ... Strip 7      | <----- |   colormap shader)        |
 |   +- Server (gen_tcp)         |  cmds  |  keys: K=chaos, S=seed    |
-|  Coordinator: halo exchange,  |        |                           |
+|  Coordinator: halo exchange,  |        |  auto-reconnect           |
 |  Task.async per strip         |        +---------------------------+
 +-------------------------------+
 ```
@@ -89,12 +89,19 @@ seeds, **K** to kill a strip and watch the wound heal.
 
 ## Notes
 
-- The hot loop (`Strip.update_cells/12`) is a hand-rolled 10-list recursion
-  instead of `Enum.zip/1` - ~3x faster, ~180 sim steps/s on a 128x128 grid.
-  Pure-BEAM float math is not the point here; the coordination is.
+- The hot loop (`Strip.update_cells/12`) walks six parallel lists with the
+  left neighbour carried along and the right one peeked from the tail -
+  no rotated row copies, no tuple per cell. ~200 sim steps/s on a 128x128
+  grid. Pure-BEAM float math is not the point here; the coordination is.
+- A strip's step reply carries its new edge rows, which are the next
+  step's halos: one message round trip per strip per step. The cache is
+  dropped after a seed command and for strips that restarted.
 - `Coordinator` tolerates strips dying between lookup and call
   (`catch :exit`) - the same race as in any distributed system: a pid can
   die between "found" and "called".
+- The client reconnects by itself (server not up yet, or restarted), and
+  drops the connection on an implausible frame header instead of waiting
+  forever for a frame that never completes.
 - A killed strip restarts in the uniform state (U=1, V=0) by design: the
   supervisor guarantees the process, the physics regrows the data.
 - Parameters are the "coral" regime (F=0.055, k=0.062, Du=0.16, Dv=0.08).

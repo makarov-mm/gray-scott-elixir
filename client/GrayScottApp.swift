@@ -5,8 +5,8 @@
 //  Keys:  K — chaos (kill a random strip process; the wound heals)
 //         S — drop new seed spots
 //
-//  Run the server first:
-//    cd server && ./run.zsh
+//  Start the server (cd server && ./run.zsh) before or after the app:
+//  the client reconnects by itself.
 
 import SwiftUI
 import MetalKit
@@ -30,7 +30,7 @@ struct ContentView: View {
                 .ignoresSafeArea()
 
             VStack(alignment: .leading, spacing: 4) {
-                Text("gray-scott \(client.dims.rows)x\(client.dims.cols)   [\(client.status)]")
+                Text("gray-scott \(client.dims.rows)x\(client.dims.cols)   [\(client.status)]   frames \(client.framesReceived)")
                 Text("K — kill a strip process (watch it heal)   S — new seeds")
                     .foregroundStyle(.secondary)
             }

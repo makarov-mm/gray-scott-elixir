@@ -79,8 +79,8 @@ final class FieldRenderer: NSObject, MTKViewDelegate {
         pendingField = nil
         lock.unlock()
 
-        if let field, dims.rows > 0 {
-            if texture == nil || texture!.width != dims.cols || texture!.height != dims.rows {
+        if let field, dims.rows > 0, field.count >= dims.rows * dims.cols {
+            if texture?.width != dims.cols || texture?.height != dims.rows {
                 let td = MTLTextureDescriptor.texture2DDescriptor(
                     pixelFormat: .r8Unorm,
                     width: dims.cols, height: dims.rows,
